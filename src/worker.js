@@ -66,10 +66,10 @@ function stripHtml(html) {
 async function fetchJson(url) {
   const cache = caches.default;
   const cacheKey = new Request(url, { method: "GET" });
-  let res = await cache.match(cacheKey);
-  if (res) return res.json();
+  const cached = await cache.match(cacheKey);
+  if (cached) return cached.json();
 
-  res = await fetch(url, {
+  const res = await fetch(url, {
     headers: {
       "User-Agent":
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
@@ -79,11 +79,16 @@ async function fetchJson(url) {
   if (!res.ok) {
     throw new Error(`Upstream ${url} returned ${res.status}`);
   }
-  const cloned = res.clone();
-  cloned.headers.set("Cache-Control", `max-age=${CACHE_TTL}`);
-  // Lưu vào cache edge, không chờ (fire and forget)
-  caches.default.put(cacheKey, cloned).catch(() => {});
-  return res.json();
+  const bodyText = await res.text();
+
+  // Tạo Response mới với header có thể chỉnh sửa để lưu vào cache edge.
+  const cacheableResponse = new Response(bodyText, {
+    status: res.status,
+    headers: { "Cache-Control": `max-age=${CACHE_TTL}` },
+  });
+  caches.default.put(cacheKey, cacheableResponse).catch(() => {});
+
+  return JSON.parse(bodyText);
 }
 
 function isSeries(item) {
