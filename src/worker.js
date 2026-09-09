@@ -180,13 +180,14 @@ async function handleStream(id) {
   for (const server of movie.episodes) {
     const items = server.items || [];
     const match = epSlug ? items.find((it) => it.slug === epSlug) : items[0];
-    if (!match) continue;
-    const url = match.m3u8 || match.embed;
-    if (!url) continue;
+    if (!match || !match.embed) continue;
+    // Nguồn chỉ cung cấp link nhúng iframe (không phải file media trực tiếp),
+    // nên dùng externalUrl để Stremio mở link này trong trình duyệt/webview
+    // khi người dùng bấm Play — đúng với cách trang gốc phân phối nội dung.
     streams.push({
       name: "NguonC",
-      title: `${server.server_name || "Server"} - ${match.name || ""}`.trim(),
-      url,
+      title: `${server.server_name || "Server"} - Tập ${match.name || ""}`.trim(),
+      externalUrl: match.embed,
     });
   }
   return { streams };
