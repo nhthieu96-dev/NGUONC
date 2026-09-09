@@ -248,6 +248,29 @@ export default {
       return jsonResponse(MANIFEST);
     }
 
+    // Route tạm để debug: xem thẳng JSON thật mà nguonc.com trả về,
+    // gọi qua chính Worker (không bị chặn bot như gọi từ máy khác).
+    // Ví dụ: /debug/list  hoặc  /debug/film/{slug}
+    if (path === "/debug/list") {
+      try {
+        const data = await fetchJson(
+          `${BASE_API}/films/danh-sach/phim-moi-cap-nhat?page=1`
+        );
+        return jsonResponse(data, 200, false);
+      } catch (err) {
+        return jsonResponse({ error: String(err) }, 500, false);
+      }
+    }
+    if (path.startsWith("/debug/film/")) {
+      const slug = path.replace("/debug/film/", "");
+      try {
+        const data = await fetchJson(`${BASE_API}/film/${slug}`);
+        return jsonResponse(data, 200, false);
+      } catch (err) {
+        return jsonResponse({ error: String(err) }, 500, false);
+      }
+    }
+
     const segments = path.split("/").filter(Boolean);
     // /catalog/{type}/{id}.json  hoặc  /catalog/{type}/{id}/search=xxx.json  hoặc /skip=20.json
 
