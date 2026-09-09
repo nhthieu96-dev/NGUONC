@@ -116,7 +116,7 @@ async function handleCatalog(type, extra) {
     const skip = parseInt(extra.skip || "0", 10) || 0;
     const page = Math.floor(skip / PAGE_SIZE) + 1;
     const data = await fetchJson(
-      `${BASE_API}/films/danh-sach/phim-moi-cap-nhat?page=${page}`
+      `${BASE_API}/films/phim-moi-cap-nhat?page=${page}`
     );
     items = data.items || [];
   }
@@ -254,7 +254,7 @@ export default {
     if (path === "/debug/list") {
       try {
         const data = await fetchJson(
-          `${BASE_API}/films/danh-sach/phim-moi-cap-nhat?page=1`
+          `${BASE_API}/films/phim-moi-cap-nhat?page=1`
         );
         return jsonResponse(data, 200, false);
       } catch (err) {
@@ -266,6 +266,36 @@ export default {
       try {
         const data = await fetchJson(`${BASE_API}/film/${slug}`);
         return jsonResponse(data, 200, false);
+      } catch (err) {
+        return jsonResponse({ error: String(err) }, 500, false);
+      }
+    }
+    // Proxy vạn năng để dò endpoint đúng, ví dụ:
+    //   /debug/raw?url=https://phim.nguonc.com/api/films/phim-moi-cap-nhat.json
+    //   /debug/raw?url=https://phim.nguonc.com/api-film/film/the-avengers
+    if (path === "/debug/raw") {
+      const target = url.searchParams.get("url");
+      if (!target) {
+        return jsonResponse({ error: "Thiếu ?url=" }, 400, false);
+      }
+      try {
+        const res = await fetch(target, {
+          headers: {
+            "User-Agent":
+              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            Accept: "application/json,text/html,*/*",
+          },
+        });
+        const text = await res.text();
+        return new Response(
+          JSON.stringify({ status: res.status, body: text.slice(0, 3000) }),
+          {
+            headers: {
+              "Content-Type": "application/json; charset=utf-8",
+              ...corsHeaders(),
+            },
+          }
+        );
       } catch (err) {
         return jsonResponse({ error: String(err) }, 500, false);
       }
