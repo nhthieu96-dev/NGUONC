@@ -1,0 +1,11 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "nguonc-stremio",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-09-01",
+  "workers_dev": true,
+  "vars": {
+    "RESOLVE_PUBLIC_EMBED": "true",
+    "PREFERRED_FORMAT": "hls"
+  }
+}

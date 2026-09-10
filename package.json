@@ -1,13 +1,16 @@
 {
-  "name": "nguonc-stremio-addon",
+  "name": "nguonc-stremio-worker",
   "version": "1.0.0",
   "private": true,
-  "description": "Stremio addon cho phim.nguonc.com, chạy trên Cloudflare Workers",
+  "type": "module",
+  "engines": { "node": ">=22" },
   "scripts": {
     "dev": "wrangler dev",
-    "deploy": "wrangler deploy"
+    "deploy": "wrangler deploy",
+    "check": "node --check src/worker.js",
+    "test": "node --test",
+    "build": "wrangler deploy --dry-run --outdir dist",
+    "smoke": "node scripts/smoke.mjs"
   },
-  "devDependencies": {
-    "wrangler": "^3.90.0"
-  }
+  "devDependencies": { "wrangler": "^4.0.0" }
 }
