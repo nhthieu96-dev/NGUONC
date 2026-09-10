@@ -14,7 +14,7 @@ const CATALOGS = [
   { id: 'nguonc-search', type: 'movie', name: 'NguonC • Tìm kiếm', path: '/films/search', search: true },
 ];
 export const manifest = {
-  id: 'community.nguonc.direct', version: '1.0.1', name: 'NguonC HLS / Direct',
+  id: 'community.nguonc.direct', version: '1.0.2', name: 'NguonC HLS / Direct',
   description: 'Danh mục, tìm kiếm và tập phim NguonC. Phát HLS/direct khi nguồn công khai cung cấp link video.',
   types: TYPES, idPrefixes: [PREFIX],
   resources: ['catalog', ...['meta', 'stream'].map(name => ({ name, types: TYPES, idPrefixes: [PREFIX] }))],
@@ -118,7 +118,7 @@ async function limitedText(response, maxBytes = 2_000_000) {
 }
 async function api(path, fetcher) {
   try {
-    const response = await fetcher(API + path, { redirect: 'error', signal: AbortSignal.timeout(12000),
+    const response = await fetcher(API + path, { redirect: 'error', signal: AbortSignal.timeout(30000),
       headers: { Accept: 'application/json' }, cf: { cacheTtlByStatus: { "200-299": 120, "300-599": -1 }, cacheEverything: true } });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = JSON.parse(await limitedText(response, 5_000_000));
