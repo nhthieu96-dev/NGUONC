@@ -14,7 +14,7 @@ const CATALOGS = [
   { id: 'nguonc-search', type: 'movie', name: 'NguonC • Tìm kiếm', path: '/films/search', search: true },
 ];
 export const manifest = {
-  id: 'community.nguonc.direct', version: '1.0.0', name: 'NguonC HLS / Direct',
+  id: 'community.nguonc.direct', version: '1.0.1', name: 'NguonC HLS / Direct',
   description: 'Danh mục, tìm kiếm và tập phim NguonC. Phát HLS/direct khi nguồn công khai cung cấp link video.',
   types: TYPES, idPrefixes: [PREFIX],
   resources: ['catalog', ...['meta', 'stream'].map(name => ({ name, types: TYPES, idPrefixes: [PREFIX] }))],
@@ -259,7 +259,7 @@ export function createWorker(fetcher = (...args) => fetch(...args)) {
         manifest: `${url.origin}/manifest.json`, install: `stremio://${url.host}/manifest.json`,
         help: 'Dán URL manifest vào Addons trong Stremio. Nếu không có stream, xem README và /diagnose/{type}/{id}.json.' });
       else if (url.pathname === '/health') response = json({ ok: true, version: manifest.version });
-      else if (url.pathname === '/manifest.json') response = json(manifest, 200, 3600);
+      else if (/^(?:\/manifest\.json)+\/?$/.test(url.pathname)) response = json(manifest, 200, 3600);
       else {
         const match = /^\/(catalog|meta|stream|diagnose)\/([^/]+)\/([^/]+?)(?:\/(.*))?\.json$/.exec(url.pathname);
         if (!match) throw new HttpError(404, 'Endpoint không tồn tại.');
