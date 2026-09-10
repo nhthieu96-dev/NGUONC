@@ -14,7 +14,7 @@ const CATALOGS = [
   { id: 'nguonc-search', type: 'movie', name: 'NguonC • Tìm kiếm', path: '/films/search', search: true },
 ];
 export const manifest = {
-  id: 'community.nguonc.direct', version: '1.0.2', name: 'NguonC HLS / Direct',
+  id: 'community.nguonc.direct', version: '1.0.3', name: 'NguonC HLS / Direct',
   description: 'Danh mục, tìm kiếm và tập phim NguonC. Phát HLS/direct khi nguồn công khai cung cấp link video.',
   types: TYPES, idPrefixes: [PREFIX],
   resources: ['catalog', ...['meta', 'stream'].map(name => ({ name, types: TYPES, idPrefixes: [PREFIX] }))],
@@ -118,13 +118,24 @@ async function limitedText(response, maxBytes = 2_000_000) {
 }
 async function api(path, fetcher) {
   try {
-    const response = await fetcher(API + path, { redirect: 'error', signal: AbortSignal.timeout(30000),
-      headers: { Accept: 'application/json' }, cf: { cacheTtlByStatus: { "200-299": 120, "300-599": -1 }, cacheEverything: true } });
+    // Keep the subrequest simple. Some Cloudflare-fronted origins reject
+    // Worker-specific cache options or requests without a normal User-Agent.
+    const response = await fetcher(API + path, {
+      redirect: 'follow',
+      signal: AbortSignal.timeout(45000),
+      headers: {
+        Accept: 'application/json, text/plain, */*',
+        'User-Agent': 'Mozilla/5.0 (compatible; NguonC-Stremio/1.0)',
+      },
+    });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = JSON.parse(await limitedText(response, 5_000_000));
     if (data.status !== 'success') throw new Error('API status is not success');
     return data;
-  } catch { throw new HttpError(502, 'NguonC không phản hồi dữ liệu hợp lệ. Thử lại sau.'); }
+  } catch (error) {
+    const reason = error instanceof Error ? error.message.slice(0, 120) : 'unknown error';
+    throw new HttpError(502, `NguonC không phản hồi dữ liệu hợp lệ (${reason}).`);
+  }
 }
 async function movieBySlug(slug, fetcher) {
   const data = await api('/film/' + encodeURIComponent(slug), fetcher);
